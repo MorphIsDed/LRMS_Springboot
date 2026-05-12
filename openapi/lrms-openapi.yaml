@@ -1,0 +1,63 @@
+openapi: 3.0.3
+info:
+  title: LRMS API
+  version: 0.1.0
+servers:
+  - url: http://localhost:8080
+paths:
+  /auth/login:
+    post:
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username: { type: string }
+                password: { type: string }
+      responses:
+        "200":
+          description: JWT token
+  /auth/register:
+    post:
+      summary: Register
+      responses:
+        "200": { description: Registered }
+  /auth/me:
+    get:
+      summary: Current user
+      responses:
+        "200": { description: OK }
+  /rooms:
+    get: { summary: List rooms, responses: { "200": { description: OK } } }
+    post: { summary: Create room, responses: { "200": { description: OK } } }
+  /rooms/summary:
+    get: { summary: Rooms summary, responses: { "200": { description: OK } } }
+  /rooms/available:
+    get: { summary: Available rooms, responses: { "200": { description: OK } } }
+  /bookings:
+    get: { summary: Search bookings, responses: { "200": { description: OK } } }
+    post: { summary: Create booking, responses: { "200": { description: OK } } }
+  /bookings/{id}/check-in:
+    patch: { summary: Check-in, responses: { "200": { description: OK } } }
+  /bookings/{id}/checkout:
+    patch: { summary: Checkout, responses: { "200": { description: OK } } }
+  /menu-items:
+    get: { summary: List menu items, responses: { "200": { description: OK } } }
+    post: { summary: Create menu item, responses: { "200": { description: OK } } }
+  /menu-items/{id}:
+    put: { summary: Update menu item, responses: { "200": { description: OK } } }
+    delete: { summary: Delete menu item, responses: { "200": { description: OK } } }
+  /orders:
+    get: { summary: List orders, responses: { "200": { description: OK } } }
+    post: { summary: Create order, responses: { "200": { description: OK } } }
+  /orders/{id}/pay:
+    post: { summary: Pay direct, responses: { "200": { description: OK } } }
+  /orders/{id}/post-to-room:
+    post: { summary: Post to room tab, responses: { "200": { description: OK } } }
+  /orders/{id}/status:
+    patch: { summary: Update status, responses: { "200": { description: OK } } }
+

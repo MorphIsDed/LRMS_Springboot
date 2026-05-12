@@ -1,0 +1,37 @@
+{
+  "info": {
+    "name": "LRMS",
+    "_postman_id": "00000000-0000-0000-0000-000000000000",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth - Login",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] },
+        "body": { "mode": "raw", "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}" }
+      }
+    },
+    {
+      "name": "Rooms - Available",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/rooms/available?checkIn=2026-05-10&checkOut=2026-05-12&type=SINGLE&guests=1",
+          "host": ["{{baseUrl}}"],
+          "path": ["rooms", "available"],
+          "query": [
+            { "key": "checkIn", "value": "2026-05-10" },
+            { "key": "checkOut", "value": "2026-05-12" },
+            { "key": "type", "value": "SINGLE" },
+            { "key": "guests", "value": "1" }
+          ]
+        }
+      }
+    }
+  ],
+  "variable": [{ "key": "baseUrl", "value": "http://localhost:8080" }]
+}
+
