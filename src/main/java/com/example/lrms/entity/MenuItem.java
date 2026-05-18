@@ -37,6 +37,9 @@ public class MenuItem {
     @Column(name = "is_available", nullable = false)
     private Boolean isAvailable = true;
 
+    @Column(name = "inventory_count", nullable = false)
+    private Integer inventoryCount = 0;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")
     private User createdBy;

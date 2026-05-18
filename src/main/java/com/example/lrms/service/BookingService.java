@@ -22,6 +22,7 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final RoomRepository roomRepository;
     private final InvoiceRepository invoiceRepository;
+    private final PricingService pricingService;
 
     public Page<Booking> searchBookings(String query, Pageable pageable) {
         return bookingRepository.searchBookings(query, pageable);
@@ -48,9 +49,10 @@ public class BookingService {
 
         booking.setStatus(Booking.BookingStatus.RESERVED);
         
-        long days = ChronoUnit.DAYS.between(booking.getCheckIn(), booking.getCheckOut());
         Room room = roomRepository.findById(booking.getRoom().getId()).orElseThrow();
-        booking.setTotalRoomCharges(room.getBaseRate().multiply(BigDecimal.valueOf(days)));
+        
+        // Use dynamic pricing
+        booking.setTotalRoomCharges(pricingService.calculateRate(room, booking.getCheckIn(), booking.getCheckOut()));
         
         return bookingRepository.save(booking);
     }

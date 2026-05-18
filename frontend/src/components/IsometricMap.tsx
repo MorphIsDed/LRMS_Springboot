@@ -78,7 +78,7 @@ export const IsometricMap = () => {
             onClick={() => setSelectedRoom(null)}
           >
             <motion.div
-              className="bg-white rounded-2xl shadow-xl p-6 w-80"
+              className="glass p-6 w-80 flex flex-col gap-2"
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}

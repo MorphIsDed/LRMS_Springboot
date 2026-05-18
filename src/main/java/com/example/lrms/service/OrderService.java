@@ -4,6 +4,7 @@ import com.example.lrms.entity.Booking;
 import com.example.lrms.entity.Order;
 import com.example.lrms.repository.BookingRepository;
 import com.example.lrms.repository.OrderRepository;
+import com.example.lrms.repository.MenuItemRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +18,7 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final BookingRepository bookingRepository;
+    private final MenuItemRepository menuItemRepository;
 
     public List<Order> getPendingOrders() {
         return orderRepository.findByStatus(Order.OrderStatus.PENDING);
@@ -38,6 +40,16 @@ public class OrderService {
         order.getItems().forEach(item -> {
             item.setOrder(order);
             item.setLineTotal(item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
+
+            // Deduct stock
+            com.example.lrms.entity.MenuItem menuItem = menuItemRepository.findById(item.getItem().getId())
+                    .orElseThrow(() -> new RuntimeException("Menu Item not found"));
+
+            if (menuItem.getInventoryCount() < item.getQuantity()) {
+                throw new RuntimeException("Insufficient stock for item: " + menuItem.getName());
+            }
+            menuItem.setInventoryCount(menuItem.getInventoryCount() - item.getQuantity());
+            menuItemRepository.save(menuItem);
         });
         
         return orderRepository.save(order);
