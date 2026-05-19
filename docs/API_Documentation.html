@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LRMS - Third-Party Partner API Documentation</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; color: #1a1a2e; line-height: 1.7; padding: 40px 60px; max-width: 900px; margin: 0 auto; }
+  @media print { body { padding: 20px 30px; } .page-break { page-break-before: always; } }
+  h1 { font-size: 28px; font-weight: 700; color: #0f172a; border-bottom: 3px solid #3b82f6; padding-bottom: 10px; margin-bottom: 6px; }
+  h2 { font-size: 20px; font-weight: 700; color: #1e3a5f; margin-top: 36px; margin-bottom: 12px; padding: 8px 14px; background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 0 6px 6px 0; }
+  h3 { font-size: 16px; font-weight: 600; color: #334155; margin-top: 22px; margin-bottom: 8px; }
+  p, li { font-size: 13px; }
+  .subtitle { font-size: 14px; color: #64748b; margin-bottom: 30px; }
+  .meta-table { width: 100%; border-collapse: collapse; margin: 16px 0 24px; font-size: 13px; }
+  .meta-table th { background: #f1f5f9; text-align: left; padding: 8px 12px; font-weight: 600; border: 1px solid #e2e8f0; }
+  .meta-table td { padding: 8px 12px; border: 1px solid #e2e8f0; }
+  .endpoint-card { border: 1px solid #e2e8f0; border-radius: 8px; margin: 14px 0; overflow: hidden; }
+  .endpoint-header { display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
+  .method { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 4px; color: #fff; }
+  .method-get { background: #22c55e; }
+  .method-post { background: #3b82f6; }
+  .method-patch { background: #f59e0b; }
+  .endpoint-path { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; }
+  .endpoint-body { padding: 12px 16px; font-size: 13px; }
+  .endpoint-body p { margin-bottom: 6px; }
+  table.params { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 12px; }
+  table.params th { background: #f8fafc; text-align: left; padding: 6px 10px; font-weight: 600; border: 1px solid #e2e8f0; }
+  table.params td { padding: 6px 10px; border: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+  table.params td:last-child { font-family: 'Inter', sans-serif; }
+  pre { background: #1e293b; color: #e2e8f0; padding: 14px 18px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; overflow-x: auto; margin: 8px 0; line-height: 1.5; }
+  .json-key { color: #7dd3fc; }
+  .json-str { color: #86efac; }
+  .json-num { color: #fbbf24; }
+  .json-bool { color: #f472b6; }
+  .note { background: #fefce8; border-left: 4px solid #f59e0b; padding: 10px 14px; font-size: 12px; margin: 10px 0; border-radius: 0 6px 6px 0; }
+  .info { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 10px 14px; font-size: 12px; margin: 10px 0; border-radius: 0 6px 6px 0; }
+  ul { padding-left: 20px; margin: 6px 0; }
+  .toc { background: #f8fafc; padding: 16px 24px; border-radius: 8px; border: 1px solid #e2e8f0; margin: 20px 0; }
+  .toc li { font-size: 13px; margin: 4px 0; }
+  .footer { margin-top: 40px; text-align: center; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 16px; }
+</style>
+</head>
+<body>
+
+<h1>LRMS &mdash; Third-Party Partner API Documentation</h1>
+<p class="subtitle">Lodging &amp; Restaurant Management System &bull; Version 1.0 &bull; May 2026</p>
+
+<div class="toc">
+  <strong>Table of Contents</strong>
+  <ol>
+    <li>Overview &amp; Architecture</li>
+    <li>Authentication &mdash; API Key Security</li>
+    <li>Standard Response Envelope</li>
+    <li>Lodging Endpoints (Rooms &amp; Bookings)</li>
+    <li>Restaurant Endpoints (Menu &amp; Orders)</li>
+    <li>Admin Dashboard Endpoints (Usage Analytics)</li>
+    <li>Error Handling</li>
+    <li>Database Schema</li>
+  </ol>
+</div>
+
+<h2>1. Overview &amp; Architecture</h2>
+<p>The LRMS Partner API enables third-party service providers such as <strong>Zomato</strong>, <strong>Swiggy</strong>, and <strong>Booking.com</strong> to programmatically interact with the LRMS platform. The API follows RESTful conventions and is versioned under <code>/api/v1/partners/</code>.</p>
+
+<table class="meta-table">
+  <tr><th>Base URL</th><td><code>http://localhost:8081/api/v1/partners</code></td></tr>
+  <tr><th>Auth Method</th><td>API Key via <code>X-API-KEY</code> header (SHA-256 hashed, stored in DB)</td></tr>
+  <tr><th>Content Type</th><td><code>application/json</code></td></tr>
+  <tr><th>Tech Stack</th><td>Java 21, Spring Boot 3.2, PostgreSQL, Flyway</td></tr>
+</table>
+
+<h3>Architecture Diagram</h3>
+<pre>
+  Partner (Zomato/Swiggy)
+        |
+        | X-API-KEY header
+        v
+  +--------------------------+
+  | ApiUsageLoggingFilter    |  &larr; Logs method, endpoint, status, latency
+  +--------------------------+
+        |
+  +--------------------------+
+  | ApiKeyAuthFilter         |  &larr; Validates key hash against DB
+  +--------------------------+
+        |
+  +--------------------------+
+  | PartnerLodgingController |
+  | PartnerRestaurantController |
+  +--------------------------+
+        |
+  +--------------------------+
+  | Service Layer            |  &larr; BookingService, OrderService, etc.
+  +--------------------------+
+        |
+  +--------------------------+
+  | PostgreSQL Database      |
+  +--------------------------+
+</pre>
+
+<h2>2. Authentication</h2>
+<p>All partner endpoints require a valid <code>X-API-KEY</code> header. The raw key is SHA-256 hashed server-side and matched against the <code>api_keys</code> table.</p>
+<div class="info"><strong>Test Key (Development):</strong> <code>X-API-KEY: test_zomato_key_12345</code></div>
+
+<h3>Request Header</h3>
+<pre>
+GET /api/v1/partners/restaurant/menu HTTP/1.1
+Host: localhost:8081
+X-API-KEY: test_zomato_key_12345
+</pre>
+
+<h3>Unauthorized Response (401)</h3>
+<pre>
+{
+  <span class="json-key">"success"</span>: <span class="json-bool">false</span>,
+  <span class="json-key">"message"</span>: <span class="json-str">"Missing X-API-KEY header"</span>
+}
+</pre>
+
+<h2>3. Standard Response Envelope</h2>
+<p>All partner API responses are wrapped in a standard envelope:</p>
+<pre>
+{
+  <span class="json-key">"success"</span>: <span class="json-bool">true</span>,
+  <span class="json-key">"data"</span>: { ... },
+  <span class="json-key">"message"</span>: <span class="json-str">"Operation completed successfully"</span>
+}
+</pre>
+
+<div class="page-break"></div>
+
+<h2>4. Lodging Endpoints</h2>
+
+<div class="endpoint-card">
+  <div class="endpoint-header">
+    <span class="method method-get">GET</span>
+    <span class="endpoint-path">/api/v1/partners/lodging/rooms</span>
+  </div>
+  <div class="endpoint-body">
+    <p><strong>Description:</strong> List all rooms, optionally filtered by availability.</p>
+    <h3>Query Parameters (all optional)</h3>
+    <table class="params">
+      <tr><th>Name</th><th>Type</th><th>Description</th></tr>
+      <tr><td>checkIn</td><td>LocalDate</td><td>Check-in date (ISO format: 2026-06-01)</td></tr>
+      <tr><td>checkOut</td><td>LocalDate</td><td>Check-out date</td></tr>
+      <tr><td>type</td><td>Enum</td><td>SINGLE, DOUBLE, SUITE, DELUXE</td></tr>
+      <tr><td>guests</td><td>Short</td><td>Number of guests</td></tr>
+    </table>
+    <h3>Sample Response (200 OK)</h3>
+    <pre>
+{
+  <span class="json-key">"success"</span>: <span class="json-bool">true</span>,
+  <span class="json-key">"data"</span>: [
+    {
+      <span class="json-key">"id"</span>: <span class="json-num">1</span>,
+      <span class="json-key">"roomNumber"</span>: <span class="json-str">"101"</span>,
+      <span class="json-key">"roomType"</span>: <span class="json-str">"DELUXE"</span>,
+      <span class="json-key">"floor"</span>: <span class="json-num">1</span>,
+      <span class="json-key">"baseRate"</span>: <span class="json-num">4500.00</span>,
+      <span class="json-key">"status"</span>: <span class="json-str">"AVAILABLE"</span>,
+      <span class="json-key">"maxOccupancy"</span>: <span class="json-num">3</span>
+    }
+  ],
+  <span class="json-key">"message"</span>: <span class="json-str">"Rooms fetched successfully"</span>
+}
+    </pre>
+  </div>
+</div>
+
+<div class="endpoint-card">
+  <div class="endpoint-header">
+    <span class="method method-post">POST</span>
+    <span class="endpoint-path">/api/v1/partners/lodging/bookings</span>
+  </div>
+  <div class="endpoint-body">
+    <p><strong>Description:</strong> Create a new booking. Guest identity is auto-resolved from API key.</p>
+    <h3>Request Body</h3>
+    <pre>
+{
+  <span class="json-key">"roomId"</span>: <span class="json-num">1</span>,
+  <span class="json-key">"checkIn"</span>: <span class="json-str">"2026-06-15"</span>,
+  <span class="json-key">"checkOut"</span>: <span class="json-str">"2026-06-18"</span>,
+  <span class="json-key">"guestName"</span>: <span class="json-str">"Rahul Sharma"</span>,
+  <span class="json-key">"guestEmail"</span>: <span class="json-str">"rahul@example.com"</span>
+}
+    </pre>
+    <h3>Response (200 OK)</h3>
+    <pre>
+{
+  <span class="json-key">"success"</span>: <span class="json-bool">true</span>,
+  <span class="json-key">"data"</span>: {
+    <span class="json-key">"id"</span>: <span class="json-num">5</span>,
+    <span class="json-key">"status"</span>: <span class="json-str">"RESERVED"</span>,
+    <span class="json-key">"checkIn"</span>: <span class="json-str">"2026-06-15"</span>,
+    <span class="json-key">"checkOut"</span>: <span class="json-str">"2026-06-18"</span>,
+    <span class="json-key">"totalRoomCharges"</span>: <span class="json-num">13500.00</span>
+  },
+  <span class="json-key">"message"</span>: <span class="json-str">"Booking created successfully"</span>
+}
+    </pre>
+  </div>
+</div>
+
+<div class="endpoint-card">
+  <div class="endpoint-header">
+    <span class="method method-patch">PATCH</span>
+    <span class="endpoint-path">/api/v1/partners/lodging/bookings/{id}</span>
+  </div>
+  <div class="endpoint-body">
+    <p><strong>Description:</strong> Update booking dates. Only <code>RESERVED</code> bookings can be modified. Re-calculates pricing automatically.</p>
+    <h3>Query Parameters</h3>
+    <table class="params">
+      <tr><th>Name</th><th>Type</th><th>Description</th></tr>
+      <tr><td>checkIn</td><td>LocalDate</td><td>New check-in date</td></tr>
+      <tr><td>checkOut</td><td>LocalDate</td><td>New check-out date</td></tr>
+    </table>
+  </div>
+</div>
+
+<div class="endpoint-card">
+  <div class="endpoint-header">
+    <span class="method method-patch">PATCH</span>
+    <span class="endpoint-path">/api/v1/partners/lodging/bookings/{id}/cancel</span>
+  </div>
+  <div class="endpoint-body">
+    <p><strong>Description:</strong> Cancel a booking. Sets status to <code>CANCELLED</code> (soft delete). Room is freed.</p>
+  </div>
+</div>
+
+<div class="page-break"></div>
+
+<h2>5. Restaurant Endpoints</h2>
+
+<div class="endpoint-card">
+  <div class="endpoint-header">
+    <span class="method method-get">GET</span>
+    <span class="endpoint-path">/api/v1/partners/restaurant/menu</span>
+  </div>
+  <div class="endpoint-body">
+    <p><strong>Description:</strong> List all available menu items, optionally filtered by category.</p>
+    <h3>Query Parameters (optional)</h3>
+    <table class="params">
+      <tr><th>Name</th><th>Type</th><th>Description</th></tr>
+      <tr><td>category</td><td>Enum</td><td>STARTER, MAIN, DESSERT, BEVERAGE</td></tr>
+    </table>
+    <h3>Sample Response (200 OK)</h3>
+    <pre>
+{
+  <span class="json-key">"success"</span>: <span class="json-bool">true</span>,
+  <span class="json-key">"data"</span>: [
+    {
+      <span class="json-key">"id"</span>: <span class="json-num">1</span>,
+      <span class="json-key">"name"</span>: <span class="json-str">"Paneer Tikka"</span>,
+      <span class="json-key">"category"</span>: <span class="json-str">"STARTER"</span>,
+      <span class="json-key">"price"</span>: <span class="json-num">350.00</span>,
+      <span class="json-key">"isAvailable"</span>: <span class="json-bool">true</span>,
+      <span class="json-key">"inventoryCount"</span>: <span class="json-num">25</span>
+    }
+  ],
+  <span class="json-key">"message"</span>: <span class="json-str">"Menu items fetched successfully"</span>
+}
+    </pre>
+  </div>
+</div>
+
+<div class="endpoint-card">
+  <div class="endpoint-header">
+    <span class="method method-post">POST</span>
+    <span class="endpoint-path">/api/v1/partners/restaurant/orders</span>
+  </div>
+  <div class="endpoint-body">
+    <p><strong>Description:</strong> Place a new restaurant order. Inventory is auto-deducted. Tax (5%) calculated server-side.</p>
+    <h3>Request Body</h3>
+    <pre>
+{
+  <span class="json-key">"tableNumber"</span>: <span class="json-str">"Table 5"</span>,
+  <span class="json-key">"items"</span>: [
+    { <span class="json-key">"itemId"</span>: <span class="json-num">1</span>, <span class="json-key">"quantity"</span>: <span class="json-num">2</span> },
+    { <span class="json-key">"itemId"</span>: <span class="json-num">3</span>, <span class="json-key">"quantity"</span>: <span class="json-num">1</span> }
+  ]
+}
+    </pre>
+    <h3>Response (200 OK)</h3>
+    <pre>
+{
+  <span class="json-key">"success"</span>: <span class="json-bool">true</span>,
+  <span class="json-key">"data"</span>: {
+    <span class="json-key">"id"</span>: <span class="json-num">12</span>,
+    <span class="json-key">"status"</span>: <span class="json-str">"PENDING"</span>,
+    <span class="json-key">"subtotal"</span>: <span class="json-num">1050.00</span>,
+    <span class="json-key">"taxAmount"</span>: <span class="json-num">52.50</span>,
+    <span class="json-key">"totalAmount"</span>: <span class="json-num">1102.50</span>
+  },
+  <span class="json-key">"message"</span>: <span class="json-str">"Order placed successfully"</span>
+}
+    </pre>
+  </div>
+</div>
+
+<div class="endpoint-card">
+  <div class="endpoint-header">
+    <span class="method method-patch">PATCH</span>
+    <span class="endpoint-path">/api/v1/partners/restaurant/orders/{id}</span>
+  </div>
+  <div class="endpoint-body">
+    <p><strong>Description:</strong> Update order status.</p>
+    <h3>Request Body</h3>
+    <pre>{ <span class="json-key">"status"</span>: <span class="json-str">"PREPARING"</span> }</pre>
+    <p><strong>Valid statuses:</strong> PENDING, PREPARING, READY, SERVED, PAID, CANCELLED</p>
+  </div>
+</div>
+
+<div class="endpoint-card">
+  <div class="endpoint-header">
+    <span class="method method-patch">PATCH</span>
+    <span class="endpoint-path">/api/v1/partners/restaurant/orders/{id}/cancel</span>
+  </div>
+  <div class="endpoint-body">
+    <p><strong>Description:</strong> Cancel an order. Sets status to <code>CANCELLED</code>.</p>
+  </div>
+</div>
+
+<div class="page-break"></div>
+
+<h2>6. Admin Dashboard Endpoints</h2>
+<div class="note"><strong>Note:</strong> These endpoints are secured by JWT (Admin role only), NOT by API Key.</div>
+
+<div class="endpoint-card">
+  <div class="endpoint-header"><span class="method method-get">GET</span><span class="endpoint-path">/api/admin/partner-stats/summary?days=30</span></div>
+  <div class="endpoint-body">
+    <p>Returns aggregated usage metrics.</p>
+    <pre>
+{ <span class="json-key">"totalCalls"</span>: <span class="json-num">1247</span>, <span class="json-key">"errorCount"</span>: <span class="json-num">23</span>, <span class="json-key">"errorRate"</span>: <span class="json-num">1.84</span>, <span class="json-key">"activePartners"</span>: <span class="json-num">3</span> }
+    </pre>
+  </div>
+</div>
+
+<div class="endpoint-card">
+  <div class="endpoint-header"><span class="method method-get">GET</span><span class="endpoint-path">/api/admin/partner-stats/usage-by-partner?days=30</span></div>
+  <div class="endpoint-body"><p>Returns per-partner request and error counts.</p></div>
+</div>
+
+<div class="endpoint-card">
+  <div class="endpoint-header"><span class="method method-get">GET</span><span class="endpoint-path">/api/admin/partner-stats/recent-logs</span></div>
+  <div class="endpoint-body"><p>Returns the 50 most recent API request logs with method, endpoint, status, and latency.</p></div>
+</div>
+
+<h2>7. Error Handling</h2>
+<table class="meta-table">
+  <tr><th>HTTP Status</th><th>Meaning</th><th>Example Cause</th></tr>
+  <tr><td>200</td><td>Success</td><td>Request processed correctly</td></tr>
+  <tr><td>400</td><td>Bad Request</td><td>Invalid request body or parameters</td></tr>
+  <tr><td>401</td><td>Unauthorized</td><td>Missing or invalid API key</td></tr>
+  <tr><td>403</td><td>Forbidden</td><td>API key is inactive</td></tr>
+  <tr><td>500</td><td>Internal Error</td><td>Room not available, insufficient stock</td></tr>
+</table>
+
+<h2>8. Database Schema (Flyway V3)</h2>
+<pre>
+CREATE TABLE api_keys (
+    id            BIGSERIAL PRIMARY KEY,
+    key_hash      VARCHAR(64) NOT NULL UNIQUE,
+    partner_name  VARCHAR(100) NOT NULL,
+    is_active     BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    system_user_id BIGINT NOT NULL REFERENCES users(user_id)
+);
+
+CREATE TABLE api_usage_logs (
+    id              BIGSERIAL PRIMARY KEY,
+    api_key_id      BIGINT NOT NULL REFERENCES api_keys(id),
+    method          VARCHAR(10) NOT NULL,
+    endpoint        VARCHAR(255) NOT NULL,
+    http_status     INTEGER NOT NULL,
+    response_time_ms BIGINT NOT NULL,
+    requested_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+</pre>
+
+<div class="footer">
+  <p>LRMS &mdash; Lodging &amp; Restaurant Management System &bull; Third-Party Partner API Documentation &bull; Confidential</p>
+  <p>Prepared by: Developer Team &bull; Date: May 19, 2026</p>
+</div>
+
+</body>
+</html>

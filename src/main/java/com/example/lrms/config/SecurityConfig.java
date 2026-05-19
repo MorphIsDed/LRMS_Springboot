@@ -3,6 +3,10 @@ package com.example.lrms.config;
 import com.example.lrms.repository.UserRepository;
 import com.example.lrms.config.JwtAuthenticationFilter;
 import com.example.lrms.security.JwtService;
+import com.example.lrms.security.ApiKeyAuthenticationFilter;
+import com.example.lrms.security.ApiUsageLoggingFilter;
+import com.example.lrms.repository.ApiKeyRepository;
+import com.example.lrms.repository.ApiUsageLogRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -65,19 +69,35 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
+    public ApiKeyAuthenticationFilter apiKeyAuthenticationFilter(ApiKeyRepository apiKeyRepository) {
+        return new ApiKeyAuthenticationFilter(apiKeyRepository);
+    }
+
+    @Bean
+    public ApiUsageLoggingFilter apiUsageLoggingFilter(ApiUsageLogRepository apiUsageLogRepository) {
+        return new ApiUsageLoggingFilter(apiUsageLogRepository);
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, 
+                                                   JwtAuthenticationFilter jwtAuthenticationFilter,
+                                                   ApiKeyAuthenticationFilter apiKeyAuthenticationFilter,
+                                                   ApiUsageLoggingFilter apiUsageLoggingFilter) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/login", "/auth/register", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/api/v1/partners/**").permitAll() // Handled by ApiKeyAuthenticationFilter
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(apiKeyAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(apiUsageLoggingFilter, ApiKeyAuthenticationFilter.class)
+                .addFilterBefore(jwtAuthenticationFilter, ApiKeyAuthenticationFilter.class);
 
         return http.build();
     }
@@ -87,7 +107,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOriginPatterns(List.of("*")); // dev-friendly; override per env for prod
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-API-KEY"));
         configuration.setExposedHeaders(List.of("Authorization"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
 @Service
@@ -98,6 +99,59 @@ public class BookingService {
                 .build();
         invoiceRepository.save(invoice);
 
+        return bookingRepository.save(booking);
+    }
+
+    @Transactional
+    public Booking updateBookingDates(Long id, LocalDate checkIn, LocalDate checkOut) {
+        Booking booking = bookingRepository.findByIdForUpdate(id)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+                
+        if (booking.getStatus() != Booking.BookingStatus.RESERVED) {
+            throw new RuntimeException("Only reserved bookings can be updated");
+        }
+
+        // Re-validate availability (excluding current booking)
+        // Simplified check: since room isn't changing, just check if it's available for new dates
+        var availableRooms = roomRepository.findAvailableRooms(
+                checkIn,
+                checkOut,
+                booking.getRoom().getRoomType(),
+                booking.getRoom().getMaxOccupancy()
+        );
+
+        if (availableRooms.stream().noneMatch(r -> r.getId().equals(booking.getRoom().getId()))) {
+            throw new RuntimeException("Room not available for new dates");
+        }
+
+        booking.setCheckIn(checkIn);
+        booking.setCheckOut(checkOut);
+        
+        // Recalculate price
+        booking.setTotalRoomCharges(pricingService.calculateRate(booking.getRoom(), checkIn, checkOut));
+        
+        return bookingRepository.save(booking);
+    }
+
+    @Transactional
+    public Booking cancelBooking(Long id) {
+        Booking booking = bookingRepository.findByIdForUpdate(id)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+                
+        if (booking.getStatus() == Booking.BookingStatus.CHECKED_IN || 
+            booking.getStatus() == Booking.BookingStatus.CHECKED_OUT) {
+            throw new RuntimeException("Cannot cancel booking in current state");
+        }
+        
+        booking.setStatus(Booking.BookingStatus.CANCELLED);
+        
+        // Set room back to available if it was marked as something else
+        Room room = booking.getRoom();
+        if (room.getStatus() == Room.RoomStatus.OCCUPIED) {
+            room.setStatus(Room.RoomStatus.AVAILABLE);
+            roomRepository.save(room);
+        }
+        
         return bookingRepository.save(booking);
     }
 }

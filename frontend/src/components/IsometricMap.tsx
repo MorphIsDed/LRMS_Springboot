@@ -99,7 +99,7 @@ export const IsometricMap = () => {
 };
 
 const RoomCube = ({ room, onSelect }: { room: any; onSelect: (room: any) => void }) => {
-  const colorClass = statusColors[room.status];
+  const colorClass = statusColors[room.status] || 'bg-gray-200 text-gray-800';
   const isOccupied = room.status === 'occupied';
 
   return (

@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LRMS - Code Snippets and Outputs</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Inter',sans-serif;color:#1a1a2e;line-height:1.6;padding:40px 60px;max-width:900px;margin:0 auto}
+  @media print{body{padding:20px 30px}.pb{page-break-before:always}}
+  h1{font-size:26px;font-weight:700;color:#0f172a;border-bottom:3px solid #3b82f6;padding-bottom:8px;margin-bottom:4px}
+  h2{font-size:18px;font-weight:700;color:#1e3a5f;margin-top:32px;margin-bottom:10px;padding:7px 14px;background:#eff6ff;border-left:4px solid #3b82f6;border-radius:0 6px 6px 0}
+  h3{font-size:14px;font-weight:600;color:#334155;margin-top:18px;margin-bottom:6px}
+  p,li{font-size:12.5px}
+  .sub{font-size:13px;color:#64748b;margin-bottom:28px}
+  pre{background:#1e293b;color:#e2e8f0;padding:12px 16px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:10.5px;overflow-x:auto;margin:8px 0;line-height:1.5;white-space:pre-wrap;word-wrap:break-word}
+  .k{color:#7dd3fc}.s{color:#86efac}.n{color:#fbbf24}.b{color:#f472b6}.c{color:#94a3b8;font-style:italic}.a{color:#c4b5fd}
+  .file{font-size:11px;color:#64748b;margin-bottom:2px;font-family:'JetBrains Mono',monospace}
+  .note{background:#eff6ff;border-left:4px solid #3b82f6;padding:8px 12px;font-size:11.5px;margin:8px 0;border-radius:0 6px 6px 0}
+  .warn{background:#fefce8;border-left:4px solid #f59e0b;padding:8px 12px;font-size:11.5px;margin:8px 0;border-radius:0 6px 6px 0}
+  .out-label{display:inline-block;background:#22c55e;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;margin:10px 0 4px;letter-spacing:0.5px}
+  .out-err{background:#ef4444}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12px}
+  th{background:#f1f5f9;text-align:left;padding:6px 10px;font-weight:600;border:1px solid #e2e8f0}
+  td{padding:6px 10px;border:1px solid #e2e8f0}
+  .footer{margin-top:36px;text-align:center;font-size:10px;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:14px}
+</style>
+</head>
+<body>
+
+<h1>LRMS &mdash; Code Snippets &amp; Outputs Documentation</h1>
+<p class="sub">Third-Party Partner API Integration &bull; May 2026</p>
+
+<h2>1. Database Migration (Flyway V3)</h2>
+<p class="file">src/main/resources/db/migration/V3__partner_api.sql</p>
+<pre>
+CREATE TABLE <span class="a">api_keys</span> (
+    id              BIGSERIAL PRIMARY KEY,
+    key_hash        VARCHAR(64) NOT NULL,
+    partner_name    VARCHAR(100) NOT NULL,
+    is_active       BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    system_user_id  BIGINT NOT NULL,
+    CONSTRAINT fk_api_key_system_user
+        FOREIGN KEY (system_user_id) REFERENCES users(user_id)
+);
+
+CREATE UNIQUE INDEX idx_api_keys_key_hash ON api_keys(key_hash);
+
+CREATE TABLE <span class="a">api_usage_logs</span> (
+    id               BIGSERIAL PRIMARY KEY,
+    api_key_id       BIGINT NOT NULL,
+    method           VARCHAR(10) NOT NULL,
+    endpoint         VARCHAR(255) NOT NULL,
+    http_status      INTEGER NOT NULL,
+    response_time_ms BIGINT NOT NULL,
+    requested_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_api_usage_log_api_key
+        FOREIGN KEY (api_key_id) REFERENCES api_keys(id)
+);
+</pre>
+
+<h2>2. Entity &mdash; ApiKey.java</h2>
+<p class="file">src/main/java/com/example/lrms/entity/ApiKey.java</p>
+<pre>
+<span class="a">@Entity</span>
+<span class="a">@Table</span>(name = <span class="s">"api_keys"</span>)
+<span class="a">@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder</span>
+<span class="k">public class</span> <span class="a">ApiKey</span> {
+
+    <span class="a">@Id @GeneratedValue</span>(strategy = GenerationType.IDENTITY)
+    <span class="k">private</span> Long id;
+
+    <span class="a">@Column</span>(name = <span class="s">"key_hash"</span>, nullable = <span class="b">false</span>, unique = <span class="b">true</span>)
+    <span class="k">private</span> String keyHash;
+
+    <span class="a">@Column</span>(name = <span class="s">"partner_name"</span>, nullable = <span class="b">false</span>)
+    <span class="k">private</span> String partnerName;
+
+    <span class="a">@Builder.Default</span>
+    <span class="a">@Column</span>(name = <span class="s">"is_active"</span>, nullable = <span class="b">false</span>)
+    <span class="k">private</span> Boolean isActive = <span class="b">true</span>;
+
+    <span class="a">@Column</span>(name = <span class="s">"created_at"</span>, insertable = <span class="b">false</span>, updatable = <span class="b">false</span>)
+    <span class="k">private</span> LocalDateTime createdAt;
+
+    <span class="a">@ManyToOne</span>(fetch = FetchType.LAZY)
+    <span class="a">@JoinColumn</span>(name = <span class="s">"system_user_id"</span>, nullable = <span class="b">false</span>)
+    <span class="k">private</span> User systemUser;
+}
+</pre>
+
+<h2>3. API Key Authentication Filter</h2>
+<p class="file">src/main/java/com/example/lrms/security/ApiKeyAuthenticationFilter.java</p>
+<pre>
+<span class="k">public class</span> <span class="a">ApiKeyAuthenticationFilter</span> <span class="k">extends</span> OncePerRequestFilter {
+
+    <span class="k">private static final</span> String API_KEY_HEADER = <span class="s">"X-API-KEY"</span>;
+    <span class="k">private final</span> ApiKeyRepository apiKeyRepository;
+
+    <span class="a">@Override</span>
+    <span class="k">protected void</span> doFilterInternal(HttpServletRequest request,
+            HttpServletResponse response, FilterChain filterChain)
+            <span class="k">throws</span> ServletException, IOException {
+
+        <span class="c">// Only apply to partner API paths</span>
+        <span class="k">if</span> (!request.getRequestURI().startsWith(<span class="s">"/api/v1/partners"</span>)) {
+            filterChain.doFilter(request, response);
+            <span class="k">return</span>;
+        }
+
+        String reqApiKey = request.getHeader(API_KEY_HEADER);
+        <span class="k">if</span> (reqApiKey == <span class="b">null</span> || reqApiKey.isBlank()) {
+            sendUnauthorizedError(response, <span class="s">"Missing X-API-KEY header"</span>);
+            <span class="k">return</span>;
+        }
+
+        String keyHash = hashKey(reqApiKey); <span class="c">// SHA-256</span>
+        Optional&lt;ApiKey&gt; apiKeyOpt = apiKeyRepository
+                .findByKeyHashAndIsActiveTrue(keyHash);
+
+        <span class="k">if</span> (apiKeyOpt.isPresent()) {
+            PreAuthenticatedAuthenticationToken auth =
+                <span class="k">new</span> PreAuthenticatedAuthenticationToken(
+                    apiKeyOpt.get(), <span class="b">null</span>,
+                    Collections.singletonList(
+                        <span class="k">new</span> SimpleGrantedAuthority(<span class="s">"ROLE_PARTNER"</span>)));
+            SecurityContextHolder.getContext().setAuthentication(auth);
+        } <span class="k">else</span> {
+            sendUnauthorizedError(response, <span class="s">"Invalid or inactive API Key"</span>);
+            <span class="k">return</span>;
+        }
+        filterChain.doFilter(request, response);
+    }
+}
+</pre>
+
+<h2>4. Usage Logging Filter</h2>
+<p class="file">src/main/java/com/example/lrms/security/ApiUsageLoggingFilter.java</p>
+<pre>
+<span class="k">public class</span> <span class="a">ApiUsageLoggingFilter</span> <span class="k">extends</span> OncePerRequestFilter {
+
+    <span class="a">@Override</span>
+    <span class="k">protected void</span> doFilterInternal(...) <span class="k">throws</span> ... {
+        <span class="k">if</span> (!request.getRequestURI().startsWith(<span class="s">"/api/v1/partners"</span>)) {
+            filterChain.doFilter(request, response); <span class="k">return</span>;
+        }
+
+        <span class="k">long</span> startTime = System.currentTimeMillis();
+        ContentCachingResponseWrapper wrapper =
+            <span class="k">new</span> ContentCachingResponseWrapper(response);
+        <span class="k">try</span> {
+            filterChain.doFilter(request, wrapper);
+        } <span class="k">finally</span> {
+            <span class="k">long</span> duration = System.currentTimeMillis() - startTime;
+            wrapper.copyBodyToResponse();
+            <span class="c">// Persist log entry with method, endpoint, status, duration</span>
+            logUsage(request, wrapper.getStatus(), duration);
+        }
+    }
+}
+</pre>
+
+<div class="pb"></div>
+
+<h2>5. Security Configuration Updates</h2>
+<p class="file">src/main/java/com/example/lrms/config/SecurityConfig.java (key changes)</p>
+<pre>
+<span class="a">@Bean</span>
+<span class="k">public</span> SecurityFilterChain securityFilterChain(HttpSecurity http,
+        JwtAuthenticationFilter jwtFilter,
+        ApiKeyAuthenticationFilter apiKeyFilter,
+        ApiUsageLoggingFilter usageFilter) <span class="k">throws</span> Exception {
+    http
+        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+        .csrf(AbstractHttpConfigurer::disable)
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers(<span class="s">"/auth/login"</span>, <span class="s">"/auth/register"</span>).permitAll()
+            .requestMatchers(<span class="s">"/api/v1/partners/**"</span>).permitAll()
+            .anyRequest().authenticated()
+        )
+        .addFilterBefore(apiKeyFilter, UsernamePasswordAuthenticationFilter.<span class="k">class</span>)
+        .addFilterBefore(usageFilter, ApiKeyAuthenticationFilter.<span class="k">class</span>)
+        .addFilterBefore(jwtFilter, ApiKeyAuthenticationFilter.<span class="k">class</span>);
+    <span class="k">return</span> http.build();
+}
+
+<span class="c">// CORS: added X-API-KEY to allowed headers</span>
+configuration.setAllowedHeaders(List.of(<span class="s">"Authorization"</span>, <span class="s">"Content-Type"</span>, <span class="s">"X-API-KEY"</span>));
+</pre>
+
+<h2>6. Partner Lodging Controller</h2>
+<p class="file">src/main/java/com/example/lrms/controller/PartnerLodgingController.java</p>
+<pre>
+<span class="a">@RestController</span>
+<span class="a">@RequestMapping</span>(<span class="s">"/api/v1/partners/lodging"</span>)
+<span class="k">public class</span> <span class="a">PartnerLodgingController</span> {
+
+    <span class="a">@GetMapping</span>(<span class="s">"/rooms"</span>)
+    <span class="k">public</span> ResponseEntity&lt;PartnerApiResponse&lt;List&lt;Room&gt;&gt;&gt; getRooms(
+            @RequestParam(required=<span class="b">false</span>) LocalDate checkIn,
+            @RequestParam(required=<span class="b">false</span>) LocalDate checkOut,
+            @RequestParam(required=<span class="b">false</span>) Room.RoomType type,
+            @RequestParam(required=<span class="b">false</span>) Short guests) { ... }
+
+    <span class="a">@PostMapping</span>(<span class="s">"/bookings"</span>)
+    <span class="k">public</span> ResponseEntity&lt;...&gt; createBooking(
+            @RequestBody PartnerBookingRequest request,
+            Authentication auth) {
+        ApiKey apiKey = (ApiKey) auth.getPrincipal();
+        Booking booking = Booking.builder()
+            .guest(apiKey.getSystemUser())
+            .room(roomService.getRoomById(request.getRoomId()))
+            .checkIn(request.getCheckIn())
+            .checkOut(request.getCheckOut()).build();
+        <span class="k">return</span> ResponseEntity.ok(
+            PartnerApiResponse.success(bookingService.createBooking(booking),
+                <span class="s">"Booking created successfully"</span>));
+    }
+
+    <span class="a">@PatchMapping</span>(<span class="s">"/bookings/{id}"</span>)
+    <span class="k">public</span> ResponseEntity&lt;...&gt; updateBooking(...) { ... }
+
+    <span class="a">@PatchMapping</span>(<span class="s">"/bookings/{id}/cancel"</span>)
+    <span class="k">public</span> ResponseEntity&lt;...&gt; cancelBooking(...) { ... }
+}
+</pre>
+
+<h2>7. Partner Restaurant Controller</h2>
+<p class="file">src/main/java/com/example/lrms/controller/PartnerRestaurantController.java</p>
+<pre>
+<span class="a">@RestController</span>
+<span class="a">@RequestMapping</span>(<span class="s">"/api/v1/partners/restaurant"</span>)
+<span class="k">public class</span> <span class="a">PartnerRestaurantController</span> {
+
+    <span class="a">@GetMapping</span>(<span class="s">"/menu"</span>)
+    <span class="k">public</span> ResponseEntity&lt;...&gt; getMenu(
+            @RequestParam(required=<span class="b">false</span>) MenuItemCategory category) {
+        <span class="k">return</span> ResponseEntity.ok(PartnerApiResponse.success(
+            menuItemService.getAllMenuItems(<span class="b">true</span>, category),
+            <span class="s">"Menu items fetched successfully"</span>));
+    }
+
+    <span class="a">@PostMapping</span>(<span class="s">"/orders"</span>)
+    <span class="k">public</span> ResponseEntity&lt;...&gt; createOrder(
+            @RequestBody PartnerOrderRequest request,
+            Authentication auth) {
+        ApiKey apiKey = (ApiKey) auth.getPrincipal();
+        Order order = Order.builder()
+            .waiter(apiKey.getSystemUser())
+            .tableNumber(request.getTableNumber() != <span class="b">null</span>
+                ? request.getTableNumber() : <span class="s">"DELIVERY"</span>)
+            .paymentMode(Order.PaymentMode.DIRECT)
+            .items(<span class="k">new</span> ArrayList&lt;&gt;()).build();
+        <span class="c">// ... add items from request, then:</span>
+        <span class="k">return</span> ResponseEntity.ok(PartnerApiResponse.success(
+            orderService.createOrder(order), <span class="s">"Order placed"</span>));
+    }
+
+    <span class="a">@PatchMapping</span>(<span class="s">"/orders/{id}"</span>)       <span class="c">// Update status</span>
+    <span class="a">@PatchMapping</span>(<span class="s">"/orders/{id}/cancel"</span>) <span class="c">// Cancel order</span>
+}
+</pre>
+
+<div class="pb"></div>
+
+<h2>8. DTO Contracts</h2>
+
+<h3>PartnerBookingRequest.java</h3>
+<pre>
+<span class="a">@Data</span>
+<span class="k">public class</span> <span class="a">PartnerBookingRequest</span> {
+    <span class="a">@NotNull</span>  <span class="k">private</span> Integer roomId;
+    <span class="a">@NotNull @FutureOrPresent</span> <span class="k">private</span> LocalDate checkIn;
+    <span class="a">@NotNull @Future</span>          <span class="k">private</span> LocalDate checkOut;
+    <span class="a">@NotBlank</span> <span class="k">private</span> String guestName;
+    <span class="a">@NotBlank</span> <span class="k">private</span> String guestEmail;
+}
+</pre>
+
+<h3>PartnerOrderRequest.java</h3>
+<pre>
+<span class="a">@Data</span>
+<span class="k">public class</span> <span class="a">PartnerOrderRequest</span> {
+    <span class="k">private</span> String tableNumber;
+    <span class="a">@NotEmpty</span> <span class="k">private</span> List&lt;PartnerOrderItemRequest&gt; items;
+
+    <span class="a">@Data</span>
+    <span class="k">public static class</span> <span class="a">PartnerOrderItemRequest</span> {
+        <span class="a">@NotNull</span> <span class="k">private</span> Integer itemId;
+        <span class="a">@NotNull</span> <span class="k">private</span> Short quantity;
+    }
+}
+</pre>
+
+<h3>PartnerApiResponse.java (Generic Envelope)</h3>
+<pre>
+<span class="a">@Data @Builder</span>
+<span class="k">public class</span> <span class="a">PartnerApiResponse</span>&lt;T&gt; {
+    <span class="k">private boolean</span> success;
+    <span class="k">private</span> T data;
+    <span class="k">private</span> String message;
+
+    <span class="k">public static</span> &lt;T&gt; PartnerApiResponse&lt;T&gt; success(T data, String msg) { ... }
+    <span class="k">public static</span> &lt;T&gt; PartnerApiResponse&lt;T&gt; error(String msg) { ... }
+}
+</pre>
+
+<h2>9. Sample cURL Commands &amp; Outputs</h2>
+
+<h3>9.1 &mdash; Fetch Menu (Success)</h3>
+<pre>
+<span class="c">$ curl -H "X-API-KEY: test_zomato_key_12345" \
+       http://localhost:8081/api/v1/partners/restaurant/menu</span>
+</pre>
+<span class="out-label">OUTPUT &mdash; 200 OK</span>
+<pre>
+{
+  <span class="k">"success"</span>: <span class="b">true</span>,
+  <span class="k">"data"</span>: [
+    {
+      <span class="k">"id"</span>: <span class="n">1</span>,
+      <span class="k">"name"</span>: <span class="s">"Paneer Tikka"</span>,
+      <span class="k">"category"</span>: <span class="s">"STARTER"</span>,
+      <span class="k">"price"</span>: <span class="n">350.00</span>,
+      <span class="k">"isAvailable"</span>: <span class="b">true</span>,
+      <span class="k">"inventoryCount"</span>: <span class="n">25</span>
+    }
+  ],
+  <span class="k">"message"</span>: <span class="s">"Menu items fetched successfully"</span>
+}
+</pre>
+
+<h3>9.2 &mdash; Place Order (Success)</h3>
+<pre>
+<span class="c">$ curl -X POST -H "X-API-KEY: test_zomato_key_12345" \
+       -H "Content-Type: application/json" \
+       -d '{"tableNumber":"T5","items":[{"itemId":1,"quantity":2}]}' \
+       http://localhost:8081/api/v1/partners/restaurant/orders</span>
+</pre>
+<span class="out-label">OUTPUT &mdash; 200 OK</span>
+<pre>
+{
+  <span class="k">"success"</span>: <span class="b">true</span>,
+  <span class="k">"data"</span>: {
+    <span class="k">"id"</span>: <span class="n">12</span>, <span class="k">"status"</span>: <span class="s">"PENDING"</span>,
+    <span class="k">"subtotal"</span>: <span class="n">700.00</span>, <span class="k">"taxAmount"</span>: <span class="n">35.00</span>,
+    <span class="k">"totalAmount"</span>: <span class="n">735.00</span>
+  },
+  <span class="k">"message"</span>: <span class="s">"Order placed successfully"</span>
+}
+</pre>
+
+<h3>9.3 &mdash; List Available Rooms</h3>
+<pre>
+<span class="c">$ curl -H "X-API-KEY: test_zomato_key_12345" \
+       "http://localhost:8081/api/v1/partners/lodging/rooms?checkIn=2026-06-15&amp;checkOut=2026-06-18&amp;type=DELUXE&amp;guests=2"</span>
+</pre>
+<span class="out-label">OUTPUT &mdash; 200 OK</span>
+<pre>
+{
+  <span class="k">"success"</span>: <span class="b">true</span>,
+  <span class="k">"data"</span>: [
+    { <span class="k">"id"</span>: <span class="n">1</span>, <span class="k">"roomNumber"</span>: <span class="s">"101"</span>, <span class="k">"roomType"</span>: <span class="s">"DELUXE"</span>,
+      <span class="k">"baseRate"</span>: <span class="n">4500.00</span>, <span class="k">"status"</span>: <span class="s">"AVAILABLE"</span> }
+  ],
+  <span class="k">"message"</span>: <span class="s">"Rooms fetched successfully"</span>
+}
+</pre>
+
+<h3>9.4 &mdash; Create Booking</h3>
+<pre>
+<span class="c">$ curl -X POST -H "X-API-KEY: test_zomato_key_12345" \
+       -H "Content-Type: application/json" \
+       -d '{"roomId":1,"checkIn":"2026-06-15","checkOut":"2026-06-18",
+            "guestName":"Rahul S","guestEmail":"rahul@test.com"}' \
+       http://localhost:8081/api/v1/partners/lodging/bookings</span>
+</pre>
+<span class="out-label">OUTPUT &mdash; 200 OK</span>
+<pre>
+{
+  <span class="k">"success"</span>: <span class="b">true</span>,
+  <span class="k">"data"</span>: {
+    <span class="k">"id"</span>: <span class="n">5</span>, <span class="k">"status"</span>: <span class="s">"RESERVED"</span>,
+    <span class="k">"checkIn"</span>: <span class="s">"2026-06-15"</span>, <span class="k">"checkOut"</span>: <span class="s">"2026-06-18"</span>,
+    <span class="k">"totalRoomCharges"</span>: <span class="n">13500.00</span>
+  },
+  <span class="k">"message"</span>: <span class="s">"Booking created successfully"</span>
+}
+</pre>
+
+<h3>9.5 &mdash; Cancel Booking</h3>
+<pre>
+<span class="c">$ curl -X PATCH -H "X-API-KEY: test_zomato_key_12345" \
+       http://localhost:8081/api/v1/partners/lodging/bookings/5/cancel</span>
+</pre>
+<span class="out-label">OUTPUT &mdash; 200 OK</span>
+<pre>
+{
+  <span class="k">"success"</span>: <span class="b">true</span>,
+  <span class="k">"data"</span>: { <span class="k">"id"</span>: <span class="n">5</span>, <span class="k">"status"</span>: <span class="s">"CANCELLED"</span> },
+  <span class="k">"message"</span>: <span class="s">"Booking cancelled successfully"</span>
+}
+</pre>
+
+<h3>9.6 &mdash; Missing API Key (401 Error)</h3>
+<pre>
+<span class="c">$ curl http://localhost:8081/api/v1/partners/restaurant/menu</span>
+</pre>
+<span class="out-label out-err">OUTPUT &mdash; 401 UNAUTHORIZED</span>
+<pre>
+{ <span class="k">"success"</span>: <span class="b">false</span>, <span class="k">"message"</span>: <span class="s">"Missing X-API-KEY header"</span> }
+</pre>
+
+<h3>9.7 &mdash; Invalid API Key (401 Error)</h3>
+<pre>
+<span class="c">$ curl -H "X-API-KEY: wrong_key_here" \
+       http://localhost:8081/api/v1/partners/restaurant/menu</span>
+</pre>
+<span class="out-label out-err">OUTPUT &mdash; 401 UNAUTHORIZED</span>
+<pre>
+{ <span class="k">"success"</span>: <span class="b">false</span>, <span class="k">"message"</span>: <span class="s">"Invalid or inactive API Key"</span> }
+</pre>
+
+<h2>10. Build Verification Output</h2>
+
+<h3>Backend Build (Gradle)</h3>
+<pre>
+<span class="c">$ ./gradlew compileJava</span>
+
+> Task :compileJava
+<span class="s">BUILD SUCCESSFUL</span> in 15s
+1 actionable task: 1 executed
+</pre>
+
+<h3>Frontend Build (Vite + TypeScript)</h3>
+<pre>
+<span class="c">$ npm run build</span>
+
+> lrms-frontend@0.1.0 build
+> tsc -b && vite build
+
+vite v5.4.21 building for production...
+✓ 2429 modules transformed.
+dist/index.html                   0.44 kB │ gzip:   0.30 kB
+dist/assets/index-Du4pelYi.css   34.62 kB │ gzip:   6.65 kB
+dist/assets/index-CPx3VS_Q.js  437.29 kB │ gzip: 141.52 kB
+<span class="s">✓ built in 4.31s</span>
+</pre>
+
+<div class="footer">
+  <p>LRMS &mdash; Code Snippets &amp; Outputs Documentation &bull; Confidential</p>
+  <p>Prepared by: Developer Team &bull; Date: May 19, 2026</p>
+</div>
+
+</body>
+</html>

@@ -1,24 +1,31 @@
 import type { Config } from "tailwindcss";
+import plugin from "tailwindcss/plugin";
 
 export default {
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
   theme: {
     extend: {
       colors: {
-        background: "hsl(222.2 84% 4.9%)",
-        foreground: "hsl(210 40% 98%)",
-        muted: "hsl(217.2 32.6% 17.5%)",
-        mutedForeground: "hsl(215 20.2% 65.1%)",
-        border: "hsl(217.2 32.6% 17.5%)",
-        primary: "hsl(210 40% 98%)",
-        primaryForeground: "hsl(222.2 47.4% 11.2%)",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        card: "hsl(var(--card))",
+        cardForeground: "hsl(var(--card-foreground))",
+        primary: "hsl(var(--primary))",
+        primaryForeground: "hsl(var(--primary-foreground))",
+        muted: "hsl(var(--muted))",
+        mutedForeground: "hsl(var(--muted-foreground))",
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
         destructive: "hsl(0 62.8% 30.6%)",
         destructiveForeground: "hsl(210 40% 98%)"
+      },
+      fontFamily: {
+        sans: ['Inter', 'sans-serif'],
       }
     }
   },
   plugins: [
-    function({ addUtilities }) {
+    plugin(function({ addUtilities }) {
       const newUtilities = {
         '.transform-style-3d': {
           'transform-style': 'preserve-3d',
@@ -35,6 +42,6 @@ export default {
         }
       }
       addUtilities(newUtilities)
-    }
+    })
   ]
 } satisfies Config;

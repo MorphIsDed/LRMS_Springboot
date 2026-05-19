@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { useAuthStore } from "../stores/authStore";
 import { useToastStore } from "../stores/toastStore";
@@ -66,7 +67,10 @@ function toAppError(err: unknown): AppError {
 
 function logoutAndRedirect(status: 401 | 403) {
   const auth = useAuthStore.getState();
-  auth.logout(status === 401 ? ERROR_MESSAGES.unauthorized : ERROR_MESSAGES.forbidden);
+  auth.logout();
+  const msg = status === 401 ? ERROR_MESSAGES.unauthorized : ERROR_MESSAGES.forbidden;
+  const toast = useToastStore.getState();
+  toast.push({ type: "error", message: msg });
   // Avoid router coupling inside axios interceptors.
   if (window.location.pathname !== "/login") window.location.assign("/login");
 }
@@ -106,7 +110,7 @@ export function createApiClient(): AxiosInstance {
 
   client.interceptors.request.use((config) => {
     const { token } = useAuthStore.getState();
-    if (token) config.headers = { ...config.headers, Authorization: `Bearer ${token}` };
+    if (token) config.headers = { ...config.headers, Authorization: `Bearer ${token}` } as any;
 
     const method = (config.method ?? "get").toUpperCase();
     const url = config.url ?? "";
@@ -139,5 +143,9 @@ export const apiClient = createApiClient();
 export function toastOnError(err: unknown) {
   const e = toAppError(err);
   const toast = useToastStore.getState();
-  toast.push({ type: "error", message: e.message });
+  if (e.type === "FIELD_ERROR") {
+    toast.push({ type: "error", message: "Validation error on one or more fields." });
+  } else {
+    toast.push({ type: "error", message: e.message });
+  }
 }

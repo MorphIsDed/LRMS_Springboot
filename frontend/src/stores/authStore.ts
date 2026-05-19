@@ -1,34 +1,55 @@
 import { create } from 'zustand';
-import { getCurrentUser } from '../api/auth';
+import { jwtDecode } from 'jwt-decode';
+import type { Role } from '../types/domain';
 
 interface AuthState {
-  user: any | null;
-  isAuthenticated: boolean;
-  setToken: (token: string) => void;
+  token: string | null;
+  userId: string | null;
+  role: Role | null;
+  isLoggedIn: boolean;
+  error: string | null;
+  setToken: (token: string, role?: string, userId?: string) => void;
   logout: () => void;
-  fetchUser: () => Promise<void>;
+  setError: (msg: string | null) => void;
 }
 
+const getInitialState = () => {
+  const token = localStorage.getItem('token');
+  if (!token) return { token: null, userId: null, role: null, isLoggedIn: false, error: null };
+  try {
+    const decoded = jwtDecode<any>(token);
+    return {
+      token,
+      userId: decoded.sub || null, // Standard JWT subject
+      role: decoded.role || null,
+      isLoggedIn: true,
+      error: null,
+    };
+  } catch (err) {
+    localStorage.removeItem('token');
+    return { token: null, userId: null, role: null, isLoggedIn: false, error: null };
+  }
+};
+
 export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  isAuthenticated: !!localStorage.getItem('token'),
-  setToken: (token: string) => {
+  ...getInitialState(),
+  setToken: (token: string, role?: string, userId?: string) => {
     localStorage.setItem('token', token);
-    set({ isAuthenticated: true });
+    try {
+      const decoded = jwtDecode<any>(token);
+      set({ 
+        token, 
+        isLoggedIn: true, 
+        role: (role || decoded.role) as Role, 
+        userId: userId || decoded.sub || null 
+      });
+    } catch (err) {
+      set({ token, isLoggedIn: true, role: role as Role, userId: userId || null });
+    }
   },
   logout: () => {
     localStorage.removeItem('token');
-    set({ user: null, isAuthenticated: false });
+    set({ token: null, userId: null, role: null, isLoggedIn: false, error: null });
   },
-  fetchUser: async () => {
-    try {
-      if (localStorage.getItem('token')) {
-        const user = await getCurrentUser();
-        set({ user });
-      }
-    } catch (error) {
-      localStorage.removeItem('token');
-      set({ user: null, isAuthenticated: false });
-    }
-  },
+  setError: (msg: string | null) => set({ error: msg }),
 }));

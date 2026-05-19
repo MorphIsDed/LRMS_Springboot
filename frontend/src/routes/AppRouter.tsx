@@ -9,11 +9,13 @@ import { KitchenDisplay } from "../views/KitchenDisplay";
 import { AdminDashboard } from "../views/AdminDashboard";
 import { MyBookingsPage } from "../views/MyBookingsPage";
 import { DashboardRedirect } from "../views/DashboardRedirect";
+import { PartnerApiDashboard } from "../views/PartnerApiDashboard";
 
 export function AppRouter() {
   return (
     <Routes>
-      <Route path="/" element={<GuestBookingPortal />} />
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/book" element={<GuestBookingPortal />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
@@ -21,6 +23,7 @@ export function AppRouter() {
 
       <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
         <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/partner-api" element={<PartnerApiDashboard />} />
       </Route>
 
       <Route element={<ProtectedRoute allowedRoles={["RECEPTIONIST", "ADMIN"]} />}>

@@ -7,8 +7,8 @@ export function Input({ className, hasError, ...props }: Props) {
   return (
     <input
       className={cn(
-        "h-10 w-full rounded-md border bg-white px-3 text-sm outline-none transition-colors placeholder:text-slate-400 focus:border-slate-400",
-        hasError && "border-red-400 focus:border-red-500",
+        "flex h-11 w-full rounded-xl border border-input bg-background/50 px-4 py-2 text-sm text-foreground shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-mutedForeground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-transparent disabled:cursor-not-allowed disabled:opacity-50",
+        hasError && "border-destructive focus-visible:ring-destructive",
         className
       )}
       {...props}
