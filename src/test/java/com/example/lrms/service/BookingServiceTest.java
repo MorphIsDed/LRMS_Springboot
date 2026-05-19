@@ -32,6 +32,9 @@ class BookingServiceTest {
     @Mock
     private InvoiceRepository invoiceRepository;
 
+    @Mock
+    private PricingService pricingService;
+
     @InjectMocks
     private BookingService bookingService;
 
@@ -55,6 +58,7 @@ class BookingServiceTest {
 
         when(roomRepository.findAvailableRooms(any(), any(), any(), any())).thenReturn(List.of(room));
         when(roomRepository.findById(1)).thenReturn(Optional.of(room));
+        when(pricingService.calculateRate(any(), any(), any())).thenReturn(BigDecimal.valueOf(200));
         when(bookingRepository.save(any(Booking.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Booking result = bookingService.createBooking(booking);
