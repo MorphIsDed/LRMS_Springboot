@@ -17,10 +17,13 @@ export default {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         destructive: "hsl(0 62.8% 30.6%)",
-        destructiveForeground: "hsl(210 40% 98%)"
+        destructiveForeground: "hsl(210 40% 98%)",
+        accent: "hsl(var(--accent, 220 80% 45%))",
+        surface: "hsl(var(--surface, 0 0% 100%))"
       },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
+        heading: ['DM Sans', 'sans-serif']
       }
     }
   },

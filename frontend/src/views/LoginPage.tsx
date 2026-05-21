@@ -78,24 +78,19 @@ export function LoginPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0A0A0B]">
-      {/* Decorative background blurs */}
-      <div className="absolute -top-[20%] -left-[10%] w-[70%] h-[70%] rounded-full bg-blue-600/20 blur-[120px] pointer-events-none mix-blend-screen" />
-      <div className="absolute -bottom-[20%] -right-[10%] w-[60%] h-[60%] rounded-full bg-indigo-600/20 blur-[120px] pointer-events-none mix-blend-screen" />
-      
-      <div className="relative w-full max-w-md px-6 py-12">
-        <div className="mb-8 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 shadow-lg shadow-blue-500/25 mb-6">
-            <span className="text-2xl font-black text-white tracking-tighter">L</span>
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight text-white mb-2">Welcome Back</h1>
-          <p className="text-sm text-mutedForeground">Enter your credentials to access LRMS</p>
-        </div>
-
-        <div className="glass p-8">
+    <div className="flex min-h-screen">
+      {/* Branding panel */}
+      <div className="w-2/5 bg-gradient-to-br from-primary to-primaryForeground flex flex-col items-center justify-center p-8 text-white">
+        <h1 className="text-4xl font-black">LRMS</h1>
+        <p className="mt-4 text-lg text-white/90">Your lodging & restaurant management system.</p>
+      </div>
+      {/* Form panel */}
+      <div className="w-3/5 flex items-center justify-center bg-gray-50">
+        <div className="w-full max-w-md p-8 bg-white rounded-xl shadow-lg">
+          <h2 className="text-2xl font-bold text-center mb-6">Welcome Back</h2>
           <form className="space-y-5" onSubmit={onSubmit}>
             <div className="space-y-2">
-              <Label htmlFor="username" className="text-mutedForeground">Username</Label>
+              <Label htmlFor="username" className="text-gray-700">Username</Label>
               <Input
                 id="username"
                 autoComplete="username"
@@ -104,15 +99,14 @@ export function LoginPage() {
                 onBlur={() => setTouched((s) => ({ ...s, username: true }))}
                 hasError={!!fieldErrors.username}
                 placeholder="admin"
-                className="bg-black/20 border-white/10 text-white placeholder:text-white/20 focus-visible:border-blue-500/50"
+                className="border border-gray-300 focus-visible:border-primary focus-visible:ring-primary/20"
               />
-              {fieldErrors.username ? <div className="text-xs text-destructive mt-1">{fieldErrors.username}</div> : null}
+              {fieldErrors.username && <div className="text-xs text-red-600 mt-1">{fieldErrors.username}</div>}
             </div>
-            
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-mutedForeground">Password</Label>
-                <a href="#" className="text-xs text-primary hover:text-primary/80 transition-colors">Forgot password?</a>
+                <Label htmlFor="password" className="text-gray-700">Password</Label>
+                <a href="#" className="text-sm text-primary hover:text-primary/80 transition-colors">Forgot password?</a>
               </div>
               <div className="relative">
                 <Input
@@ -124,22 +118,21 @@ export function LoginPage() {
                   onBlur={() => setTouched((s) => ({ ...s, password: true }))}
                   hasError={!!fieldErrors.password}
                   placeholder="••••••••"
-                  className="bg-black/20 border-white/10 text-white placeholder:text-white/20 focus-visible:border-blue-500/50 pr-10"
+                  className="pr-10 border border-gray-300 focus-visible:border-primary focus-visible:ring-primary/20"
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-white/40 hover:text-white/80 transition-colors"
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 transition-colors"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
-              {fieldErrors.password ? <div className="text-xs text-destructive mt-1">{fieldErrors.password}</div> : null}
+              {fieldErrors.password && <div className="text-xs text-red-600 mt-1">{fieldErrors.password}</div>}
             </div>
-
-            <Button 
-              className="w-full mt-2 h-12 text-base shadow-lg shadow-blue-500/20" 
-              disabled={!canSubmit || loading} 
+            <Button
+              className="w-full mt-2 h-12 flex items-center justify-center"
+              disabled={!canSubmit || loading}
               type="submit"
             >
               {loading ? (
