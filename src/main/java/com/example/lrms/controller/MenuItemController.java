@@ -1,11 +1,13 @@
 package com.example.lrms.controller;
 
 import com.example.lrms.entity.MenuItem;
+import com.example.lrms.dto.MenuItemRequest;
 import com.example.lrms.service.MenuItemService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -26,20 +28,20 @@ public class MenuItemController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<MenuItem> createMenuItem(@RequestBody MenuItem menuItem) {
-        return ResponseEntity.ok(menuItemService.createMenuItem(menuItem));
+    public ResponseEntity<MenuItem> createMenuItem(@Valid @RequestBody MenuItemRequest menuItemRequest) {
+        return ResponseEntity.status(201).body(menuItemService.createMenuItem(menuItemRequest));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<MenuItem> updateMenuItem(@PathVariable Integer id, @RequestBody MenuItem menuItem) {
-        return ResponseEntity.ok(menuItemService.updateMenuItem(id, menuItem));
+    public ResponseEntity<MenuItem> updateMenuItem(@PathVariable Integer id, @Valid @RequestBody MenuItemRequest menuItemRequest) {
+        return ResponseEntity.ok(menuItemService.updateMenuItem(id, menuItemRequest));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteMenuItem(@PathVariable Integer id) {
         menuItemService.deleteMenuItem(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 }

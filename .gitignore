@@ -40,3 +40,8 @@ out/
 frontend/node_modules/
 frontend/dist/
 frontend/.env.local
+
+# Environmental variables
+.env
+.env.*
+!.env.*.example

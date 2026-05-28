@@ -2,6 +2,7 @@ package com.example.lrms.controller;
 
 import com.example.lrms.dto.PartnerBookingRequest;
 import com.example.lrms.dto.PartnerApiResponse;
+import com.example.lrms.dto.BookingRequest;
 import com.example.lrms.entity.ApiKey;
 import com.example.lrms.entity.Booking;
 import com.example.lrms.entity.Room;
@@ -12,6 +13,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -42,22 +44,18 @@ public class PartnerLodgingController {
 
     @PostMapping("/bookings")
     public ResponseEntity<PartnerApiResponse<Booking>> createBooking(
-            @RequestBody PartnerBookingRequest request,
+            @Valid @RequestBody PartnerBookingRequest request,
             Authentication authentication) {
         
         ApiKey apiKey = (ApiKey) authentication.getPrincipal();
         
-        Room room = roomService.getRoomById(request.getRoomId());
+        BookingRequest bookingRequest = new BookingRequest();
+        bookingRequest.setGuestId(apiKey.getSystemUser().getId());
+        bookingRequest.setRoomId(request.getRoomId());
+        bookingRequest.setCheckIn(request.getCheckIn());
+        bookingRequest.setCheckOut(request.getCheckOut());
         
-        Booking booking = Booking.builder()
-                .guest(apiKey.getSystemUser())
-                .room(room)
-                .checkIn(request.getCheckIn())
-                .checkOut(request.getCheckOut())
-                .createdBy(apiKey.getSystemUser())
-                .build();
-        
-        Booking savedBooking = bookingService.createBooking(booking);
+        Booking savedBooking = bookingService.createBooking(bookingRequest);
         return ResponseEntity.ok(PartnerApiResponse.success(savedBooking, "Booking created successfully"));
     }
 

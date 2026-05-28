@@ -11,6 +11,8 @@ import java.util.List;
 
 @Repository
 public interface RoomRepository extends JpaRepository<Room, Integer> {
+
+    long countByStatus(Room.RoomStatus status);
     
     @Query("""
         SELECT r FROM Room r
@@ -21,6 +23,7 @@ public interface RoomRepository extends JpaRepository<Room, Integer> {
             SELECT b FROM Booking b
             WHERE b.room = r
             AND b.status IN ('RESERVED', 'CHECKED_IN')
+            AND (:excludeBookingId IS NULL OR b.id != :excludeBookingId)
             AND b.checkIn < :checkOut
             AND b.checkOut > :checkIn
         )
@@ -29,5 +32,6 @@ public interface RoomRepository extends JpaRepository<Room, Integer> {
             @Param("checkIn") LocalDate checkIn,
             @Param("checkOut") LocalDate checkOut,
             @Param("type") Room.RoomType type,
-            @Param("guests") Short guests);
+            @Param("guests") Short guests,
+            @Param("excludeBookingId") Long excludeBookingId);
 }

@@ -34,10 +34,12 @@ public class MenuItem {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "is_available", nullable = false)
+    @Builder.Default
+    @Column(name = "is_available")
     private Boolean isAvailable = true;
 
-    @Column(name = "inventory_count", nullable = false)
+    @Builder.Default
+    @Column(name = "inventory_count")
     private Integer inventoryCount = 0;
 
     @ManyToOne(fetch = FetchType.LAZY)

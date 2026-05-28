@@ -41,6 +41,7 @@ public class Booking {
     @Column(length = 20)
     private BookingStatus status;
 
+    @Builder.Default
     @Column(name = "total_room_charges", precision = 10, scale = 2)
     private BigDecimal totalRoomCharges = BigDecimal.ZERO;
 

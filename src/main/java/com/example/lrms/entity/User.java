@@ -30,6 +30,7 @@ public class User implements UserDetails {
     @Column(unique = true, nullable = false, length = 60)
     private String username;
 
+    @org.hibernate.annotations.JdbcType(org.hibernate.type.descriptor.jdbc.CharJdbcType.class)
     @Column(name = "password_hash", nullable = false, length = 60)
     @JsonIgnore
     private String password;
@@ -41,7 +42,8 @@ public class User implements UserDetails {
     @Column(nullable = false, length = 20)
     private Role role;
 
-    @Column(name = "is_active", nullable = false)
+    @Builder.Default
+    @Column(name = "is_active")
     private Boolean isActive = true;
 
     @Column(name = "created_at", insertable = false, updatable = false)

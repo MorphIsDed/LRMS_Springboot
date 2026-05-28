@@ -2,6 +2,7 @@ package com.example.lrms.controller;
 
 import com.example.lrms.entity.ApiUsageLog;
 import com.example.lrms.repository.ApiUsageLogRepository;
+import com.example.lrms.repository.ApiKeyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,6 +20,7 @@ import java.util.Map;
 public class ApiDashboardController {
 
     private final ApiUsageLogRepository apiUsageLogRepository;
+    private final ApiKeyRepository apiKeyRepository;
 
     @GetMapping("/summary")
     public ResponseEntity<Map<String, Object>> getSummary(@RequestParam(defaultValue = "30") Integer days) {
@@ -26,7 +28,7 @@ public class ApiDashboardController {
         
         long totalCalls = apiUsageLogRepository.countByRequestedAtAfter(since);
         long errorCount = apiUsageLogRepository.countByHttpStatusGreaterThanEqualAndRequestedAtAfter(400, since);
-        long activePartners = apiUsageLogRepository.countActivePartners();
+        long activePartners = apiKeyRepository.countActivePartners();
         
         double errorRate = totalCalls > 0 ? (double) errorCount * 100.0 / totalCalls : 0.0;
         

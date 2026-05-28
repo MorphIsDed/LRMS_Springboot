@@ -8,7 +8,8 @@ import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Label } from "../components/ui/Label";
 import { VALIDATION_RULES } from "../constants/validation";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 type LoginResponse = { token: string, role: string, userId: string };
 
@@ -20,7 +21,6 @@ function validateUsername(v: string) {
 
 function validatePassword(v: string) {
   if (!v) return "Password is required.";
-  if (v.length < VALIDATION_RULES.password.min) return "Password is too short.";
   return null;
 }
 
@@ -35,10 +35,7 @@ export function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [touched, setTouched] = useState<{ username: boolean; password: boolean }>({
-    username: false,
-    password: false
-  });
+  const [touched, setTouched] = useState({ username: false, password: false });
 
   const fieldErrors = useMemo(() => {
     return {
@@ -78,73 +75,134 @@ export function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen">
-      {/* Branding panel */}
-      <div className="w-2/5 bg-gradient-to-br from-primary to-primaryForeground flex flex-col items-center justify-center p-8 text-white">
-        <h1 className="text-4xl font-black">LRMS</h1>
-        <p className="mt-4 text-lg text-white/90">Your lodging & restaurant management system.</p>
-      </div>
-      {/* Form panel */}
-      <div className="w-3/5 flex items-center justify-center bg-gray-50">
-        <div className="w-full max-w-md p-8 bg-white rounded-xl shadow-lg">
-          <h2 className="text-2xl font-bold text-center mb-6">Welcome Back</h2>
-          <form className="space-y-5" onSubmit={onSubmit}>
-            <div className="space-y-2">
-              <Label htmlFor="username" className="text-gray-700">Username</Label>
-              <Input
-                id="username"
-                autoComplete="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                onBlur={() => setTouched((s) => ({ ...s, username: true }))}
-                hasError={!!fieldErrors.username}
-                placeholder="admin"
-                className="border border-gray-300 focus-visible:border-primary focus-visible:ring-primary/20"
-              />
-              {fieldErrors.username && <div className="text-xs text-red-600 mt-1">{fieldErrors.username}</div>}
+    <div className="flex min-h-screen bg-neutral-900 bg-[url('https://images.unsplash.com/photo-1542314831-c6a4d14d8c85?auto=format&fit=crop&q=80')] bg-cover bg-center">
+      <div className="flex w-full min-h-screen bg-black/60 backdrop-blur-sm">
+        {/* Branding panel */}
+        <div className="hidden lg:flex w-1/2 flex-col items-center justify-center p-12 text-white">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="max-w-xl text-center"
+          >
+            <h1 className="text-6xl font-black mb-6 tracking-tight">LRMS</h1>
+            <p className="text-xl text-white/80 leading-relaxed font-light">
+              Experience the next generation of lodging and restaurant management. 
+              Seamless, powerful, and intuitive.
+            </p>
+          </motion.div>
+        </div>
+        
+        {/* Form panel */}
+        <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-6">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+            className="w-full max-w-md p-8 sm:p-10 bg-background/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/10 dark:border-white/5"
+          >
+            <div className="mb-10 text-center">
+              <h2 className="text-3xl font-bold text-foreground tracking-tight">Welcome Back</h2>
+              <p className="text-muted-foreground mt-2 text-sm">Sign in to continue to your dashboard</p>
             </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-gray-700">Password</Label>
-                <a href="#" className="text-sm text-primary hover:text-primary/80 transition-colors">Forgot password?</a>
-              </div>
-              <div className="relative">
+            
+            <form className="space-y-6" onSubmit={onSubmit}>
+              <div className="space-y-2">
+                <Label htmlFor="username" className="text-foreground font-medium ml-1">Username</Label>
                 <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  onBlur={() => setTouched((s) => ({ ...s, password: true }))}
-                  hasError={!!fieldErrors.password}
-                  placeholder="••••••••"
-                  className="pr-10 border border-gray-300 focus-visible:border-primary focus-visible:ring-primary/20"
+                  id="username"
+                  autoComplete="username"
+                  value={username}
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    setTouched(s => ({ ...s, username: true }));
+                  }}
+                  onBlur={() => setTouched((s) => ({ ...s, username: true }))}
+                  hasError={!!fieldErrors.username}
+                  placeholder="username"
+                  className="bg-background/50 border-border text-foreground focus-visible:ring-primary h-12 rounded-xl transition-all"
                 />
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 transition-colors"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
+                <AnimatePresence>
+                  {fieldErrors.username && (
+                    <motion.div 
+                      initial={{ opacity: 0, height: 0, y: -10 }}
+                      animate={{ opacity: 1, height: 'auto', y: 0 }}
+                      exit={{ opacity: 0, height: 0, y: -10 }}
+                      className="flex items-center gap-1.5 text-xs text-destructive mt-2 ml-1"
+                    >
+                      <AlertCircle size={14} />
+                      <span>{fieldErrors.username}</span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
-              {fieldErrors.password && <div className="text-xs text-red-600 mt-1">{fieldErrors.password}</div>}
+              
+              <div className="space-y-2">
+                <div className="flex items-center justify-between ml-1">
+                  <Label htmlFor="password" className="text-foreground font-medium">Password</Label>
+                  <a href="#" className="text-sm text-primary hover:text-primary/80 transition-colors font-medium">Forgot password?</a>
+                </div>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      setTouched(s => ({ ...s, password: true }));
+                    }}
+                    onBlur={() => setTouched((s) => ({ ...s, password: true }))}
+                    hasError={!!fieldErrors.password}
+                    placeholder="password"
+                    className="pr-12 bg-background/50 border-border text-foreground focus-visible:ring-primary h-12 rounded-xl transition-all"
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-0 flex items-center pr-4 text-muted-foreground hover:text-foreground transition-colors"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+                <AnimatePresence>
+                  {fieldErrors.password && (
+                    <motion.div 
+                      initial={{ opacity: 0, height: 0, y: -10 }}
+                      animate={{ opacity: 1, height: 'auto', y: 0 }}
+                      exit={{ opacity: 0, height: 0, y: -10 }}
+                      className="flex items-center gap-1.5 text-xs text-destructive mt-2 ml-1"
+                    >
+                      <AlertCircle size={14} />
+                      <span>{fieldErrors.password}</span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+              
+              <Button
+                className="w-full h-14 rounded-xl text-base font-semibold shadow-lg shadow-primary/20 mt-8"
+                disabled={!canSubmit || loading}
+                type="submit"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Authenticating...
+                  </>
+                ) : (
+                  "Sign In"
+                )}
+              </Button>
+            </form>
+            
+            <div className="mt-8 text-center text-sm text-muted-foreground">
+              Don't have an account?{" "}
+              <button type="button" onClick={() => nav("/signup")} className="text-primary hover:text-primary/80 font-semibold transition-colors">
+                Create one now
+              </button>
             </div>
-            <Button
-              className="w-full mt-2 h-12 flex items-center justify-center"
-              disabled={!canSubmit || loading}
-              type="submit"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Authenticating...
-                </>
-              ) : (
-                "Sign In"
-              )}
-            </Button>
-          </form>
+          </motion.div>
         </div>
       </div>
     </div>

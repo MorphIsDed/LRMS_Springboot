@@ -1,11 +1,15 @@
 package com.example.lrms.controller;
 
 import com.example.lrms.entity.Order;
+import com.example.lrms.entity.User;
+import com.example.lrms.dto.OrderRequest;
 import com.example.lrms.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 import java.util.Map;
@@ -20,17 +24,13 @@ public class OrderController {
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'WAITER', 'CHEF')")
     public ResponseEntity<List<Order>> getOrders(@RequestParam(required = false) Order.OrderStatus status) {
-        if (status == Order.OrderStatus.PENDING) {
-            return ResponseEntity.ok(orderService.getPendingOrders());
-        }
-        // Add more filtering logic if needed
-        return ResponseEntity.badRequest().build();
+        return ResponseEntity.ok(orderService.getAllOrders(status));
     }
 
     @PostMapping
     @PreAuthorize("hasAnyRole('WAITER', 'GUEST')")
-    public ResponseEntity<Order> createOrder(@RequestBody Order order) {
-        return ResponseEntity.ok(orderService.createOrder(order));
+    public ResponseEntity<Order> createOrder(@Valid @RequestBody OrderRequest orderRequest, @AuthenticationPrincipal User waiter) {
+        return ResponseEntity.status(201).body(orderService.createOrder(orderRequest, waiter));
     }
 
     @PostMapping("/{id}/pay")
@@ -41,13 +41,13 @@ public class OrderController {
 
     @PostMapping("/{id}/post-to-room")
     @PreAuthorize("hasRole('WAITER')")
-    public ResponseEntity<Order> postToRoom(@PathVariable Long id, @RequestBody Map<String, Long> payload) {
-        return ResponseEntity.ok(orderService.postToRoom(id, payload.get("bookingId")));
+    public ResponseEntity<Order> postToRoom(@PathVariable Long id, @RequestParam Long bookingId) {
+        return ResponseEntity.ok(orderService.postToRoom(id, bookingId));
     }
 
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasAnyRole('WAITER', 'CHEF')")
-    public ResponseEntity<Order> updateOrderStatus(@PathVariable Long id, @RequestBody Map<String, Order.OrderStatus> payload) {
-        return ResponseEntity.ok(orderService.updateOrderStatus(id, payload.get("status")));
+    public ResponseEntity<Order> updateOrderStatus(@PathVariable Long id, @RequestParam Order.OrderStatus status) {
+        return ResponseEntity.ok(orderService.updateOrderStatus(id, status));
     }
 }

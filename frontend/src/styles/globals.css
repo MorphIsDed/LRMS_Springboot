@@ -19,6 +19,19 @@
     --input: 210 20% 92%;
   }
 
+  .dark {
+    --background: 210 15% 10%;
+    --foreground: 0 0% 98%;
+    --card: 210 15% 12%;
+    --card-foreground: 0 0% 98%;
+    --primary: 220 80% 55%;
+    --primary-foreground: 0 0% 100%;
+    --muted: 210 20% 15%;
+    --muted-foreground: 210 10% 65%;
+    --border: 210 20% 20%;
+    --input: 210 20% 18%;
+  }
+
   body {
     @apply bg-background text-foreground antialiased selection:bg-primary/30 font-sans;
     font-family: 'Inter', sans-serif;

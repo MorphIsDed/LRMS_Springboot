@@ -10,4 +10,7 @@ import java.util.List;
 public interface MenuItemRepository extends JpaRepository<MenuItem, Integer> {
     List<MenuItem> findByIsAvailableAndCategory(Boolean isAvailable, MenuItem.MenuItemCategory category);
     List<MenuItem> findByIsAvailable(Boolean isAvailable);
+    List<MenuItem> findByCategory(MenuItem.MenuItemCategory category);
+
+    long countByInventoryCountLessThanEqual(Integer threshold);
 }

@@ -3,7 +3,7 @@ import { defineConfig } from "vite";
 
 export default defineConfig(({ mode }) => {
   // Ensure the target is always a full URL and does not get set to a relative path like '/api'
-  let apiTarget = "http://localhost:8081";
+  let apiTarget = "http://localhost:8080";
   
   const envBaseUrl = process.env.VITE_API_BASE_URL;
   if (envBaseUrl && envBaseUrl.startsWith("http")) {

@@ -33,6 +33,7 @@ public class Room {
     @Column(name = "base_rate", nullable = false, precision = 10, scale = 2)
     private BigDecimal baseRate;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
     private RoomStatus status = RoomStatus.AVAILABLE;

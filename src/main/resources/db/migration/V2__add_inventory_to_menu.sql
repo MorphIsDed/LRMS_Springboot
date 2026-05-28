@@ -1,1 +1,1 @@
-ALTER TABLE menu_items ADD COLUMN inventory_count INT DEFAULT 0;
+ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS inventory_count INT DEFAULT 0;

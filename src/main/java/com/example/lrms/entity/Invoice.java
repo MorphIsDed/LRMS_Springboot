@@ -37,6 +37,7 @@ public class Invoice {
     @Column(name = "amount_due", nullable = false, precision = 10, scale = 2)
     private BigDecimal amountDue;
 
+    @Builder.Default
     @Column(name = "amount_paid", precision = 10, scale = 2)
     private BigDecimal amountPaid = BigDecimal.ZERO;
 

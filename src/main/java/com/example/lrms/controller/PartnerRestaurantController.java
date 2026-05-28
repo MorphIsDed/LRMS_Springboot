@@ -2,20 +2,19 @@ package com.example.lrms.controller;
 
 import com.example.lrms.dto.PartnerOrderRequest;
 import com.example.lrms.dto.PartnerApiResponse;
+import com.example.lrms.dto.OrderRequest;
 import com.example.lrms.entity.ApiKey;
 import com.example.lrms.entity.MenuItem;
 import com.example.lrms.entity.Order;
-import com.example.lrms.entity.OrderItem;
 import com.example.lrms.service.MenuItemService;
 import com.example.lrms.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -36,40 +35,33 @@ public class PartnerRestaurantController {
 
     @PostMapping("/orders")
     public ResponseEntity<PartnerApiResponse<Order>> createOrder(
-            @RequestBody PartnerOrderRequest request,
+            @Valid @RequestBody PartnerOrderRequest request,
             Authentication authentication) {
         
         ApiKey apiKey = (ApiKey) authentication.getPrincipal();
         
-        Order order = Order.builder()
-                .waiter(apiKey.getSystemUser()) // System user acts as the placing waiter/agent
-                .tableNumber(request.getTableNumber() != null ? request.getTableNumber() : "DELIVERY")
-                .paymentMode(Order.PaymentMode.DIRECT)
-                .items(new ArrayList<>())
-                .build();
+        OrderRequest orderRequest = new OrderRequest();
+        orderRequest.setTableNumber(request.getTableNumber() != null ? request.getTableNumber() : "DELIVERY");
+        orderRequest.setPaymentMode(Order.PaymentMode.DIRECT);
         
-        for (PartnerOrderRequest.PartnerOrderItemRequest itemReq : request.getItems()) {
-            MenuItem menuItem = menuItemService.getMenuItemById(itemReq.getItemId());
-            
-            OrderItem orderItem = OrderItem.builder()
-                    .item(menuItem)
-                    .quantity(itemReq.getQuantity())
-                    .unitPrice(menuItem.getPrice())
-                    .build();
-            
-            order.addItem(orderItem);
-        }
+        List<OrderRequest.OrderItemRequest> items = request.getItems().stream().map(itemReq -> {
+            OrderRequest.OrderItemRequest reqItem = new OrderRequest.OrderItemRequest();
+            reqItem.setItemId(itemReq.getItemId());
+            reqItem.setQuantity(itemReq.getQuantity());
+            return reqItem;
+        }).collect(Collectors.toList());
         
-        Order savedOrder = orderService.createOrder(order);
+        orderRequest.setItems(items);
+        
+        Order savedOrder = orderService.createOrder(orderRequest, apiKey.getSystemUser());
         return ResponseEntity.ok(PartnerApiResponse.success(savedOrder, "Order placed successfully"));
     }
 
     @PatchMapping("/orders/{id}")
     public ResponseEntity<PartnerApiResponse<Order>> updateOrderStatus(
             @PathVariable Long id,
-            @RequestBody Map<String, Order.OrderStatus> payload) {
+            @RequestParam Order.OrderStatus status) {
         
-        Order.OrderStatus status = payload.get("status");
         Order updatedOrder = orderService.updateOrderStatus(id, status);
         return ResponseEntity.ok(PartnerApiResponse.success(updatedOrder, "Order status updated successfully"));
     }

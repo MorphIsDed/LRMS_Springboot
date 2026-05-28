@@ -14,8 +14,7 @@ public interface ApiUsageLogRepository extends JpaRepository<ApiUsageLog, Long> 
 
     long countByHttpStatusGreaterThanEqualAndRequestedAtAfter(int httpStatus, LocalDateTime since);
     
-    @Query("SELECT COUNT(a) FROM ApiKey a WHERE a.isActive = true")
-    long countActivePartners();
+
 
     @Query("SELECT a.partnerName as partnerName, COUNT(l) as requestCount, " +
            "SUM(CASE WHEN l.httpStatus >= 400 THEN 1 ELSE 0 END) as errorCount " +

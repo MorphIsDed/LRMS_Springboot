@@ -7,4 +7,7 @@ import java.util.Optional;
 
 public interface ApiKeyRepository extends JpaRepository<ApiKey, Long> {
     Optional<ApiKey> findByKeyHashAndIsActiveTrue(String keyHash);
+
+    @org.springframework.data.jpa.repository.Query("SELECT COUNT(a) FROM ApiKey a WHERE a.isActive = true")
+    long countActivePartners();
 }

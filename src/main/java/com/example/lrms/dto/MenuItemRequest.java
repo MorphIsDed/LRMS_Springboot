@@ -19,4 +19,5 @@ public class MenuItemRequest {
     private BigDecimal price;
     private String description;
     private Boolean isAvailable = true;
+    private Integer inventoryCount = 0;
 }

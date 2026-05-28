@@ -8,6 +8,18 @@ import { ErrorBoundary } from "./routes/ErrorBoundary";
 import { ToastViewport } from "./components/ToastViewport";
 import "./styles/globals.css";
 
+// Apply theme on load to prevent FOUC
+if (typeof window !== 'undefined') {
+  if (
+    localStorage.getItem('color-theme') === 'dark' ||
+    (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)
+  ) {
+    document.documentElement.classList.add('dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+  }
+}
+
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <ErrorBoundary>

@@ -1,11 +1,14 @@
 package com.example.lrms.controller;
 
 import com.example.lrms.entity.User;
+import com.example.lrms.dto.RegisterRequest;
+import com.example.lrms.dto.UserUpdateRequest;
 import com.example.lrms.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -28,12 +31,12 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody User user) {
-        return ResponseEntity.ok(userService.createUser(user));
+    public ResponseEntity<User> createUser(@Valid @RequestBody RegisterRequest registerRequest) {
+        return ResponseEntity.status(201).body(userService.createUser(registerRequest));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User user) {
-        return ResponseEntity.ok(userService.updateUser(id, user));
+    public ResponseEntity<User> updateUser(@PathVariable Long id, @Valid @RequestBody UserUpdateRequest userUpdateRequest) {
+        return ResponseEntity.ok(userService.updateUser(id, userUpdateRequest));
     }
 }

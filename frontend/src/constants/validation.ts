@@ -2,7 +2,7 @@ import { addDays, differenceInCalendarDays, isBefore, startOfDay } from "date-fn
 
 export const VALIDATION_RULES = {
   username: { min: 3, max: 60 },
-  password: { min: 6 },
+  password: { min: 8 },
   email: { max: 120 },
   roomNumber: { min: 1, max: 10 },
   page: { min: 0 },
